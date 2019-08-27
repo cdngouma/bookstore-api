@@ -5,12 +5,17 @@ const mongoose = require('mongoose');
 const app = express();
 
 const bookRoutes = require('./api/routes/books');
-const orderRoutes = require('./api/routes/orders');
+const authorRoutes = require('./api/routes/authors');
+
+const MONGO_ATLAS_PW = "root";
 
 mongoose.connect(
-    "mongodb+srv://root:" + "root" + 
+    "mongodb+srv://root:" + MONGO_ATLAS_PW + 
     "@cdz-bqppm.mongodb.net/test?retryWrites=true&w=majority",
-    { useNewUrlParser: true }
+    {
+        useNewUrlParser: true,
+        useCreateIndex: true
+    }
 );
 
 app.use(bodyParser.urlencoded({extended: false}));
@@ -33,6 +38,7 @@ app.use((req, res, next) => {
 });
 
 // routes which handle requests
+app.use('/authors', authorRoutes);
 app.use('/books', bookRoutes);
 // app.use('/orders', orderRoutes);
 

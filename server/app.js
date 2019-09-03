@@ -1,11 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const db = require('./config/database');
-
-// Test DB connection
-db.authenticate()
-.then(() => console.log('Connection has been established successfully.'))
-.catch((err) => console.log('Unable to connect to the database:', err));
 
 const app = express();
 
@@ -30,7 +24,7 @@ app.use(bodyParser.json());
 const bookRoutes = require('./routes/books');
 
 // routes which handle requests
-app.use('/books', bookRoutes);
+app.use('/api/books', bookRoutes);
 
 // fires when uri is not supported (does not exist)
 app.use((req, res, next) => {

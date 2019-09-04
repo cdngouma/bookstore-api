@@ -23,9 +23,11 @@ app.use(bodyParser.json());
 });*/
 
 const bookRoutes = require('./routes/books');
+const userRoutes = require('./routes/user');
 
 // routes which handle requests
 app.use('/api/books', bookRoutes);
+app.use('/api/user', userRoutes);
 
 // fires when uri is not supported (does not exist)
 app.use((req, res, next) => {

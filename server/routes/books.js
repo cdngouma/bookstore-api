@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
-const checkAuth = require('../auth/check-auth')
+const db = require('../database/db');
+const checkAuth = require('../auth/check-auth');
 
 router.get('/', (req, res, next) => {
     const SQL = 'SELECT id, author, isbn, title, `year` AS publicationYear, price, cover FROM Books';
@@ -75,7 +75,7 @@ router.get('/:bookId', (req, res, next) => {
     });
 });
 
-router.patch('/:bookId', (req, res, next) => {
+router.patch('/:bookId', checkAuth, (req, res, next) => {
     const bookId = req.params.bookId;
     const SQL = 'CALL EDIT_BOOK (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
     const params = [
@@ -118,7 +118,7 @@ router.patch('/:bookId', (req, res, next) => {
     });
 });
 
-router.delete('/:bookId', (req, res, next) => {
+router.delete('/:bookId', checkAuth, (req, res, next) => {
     const bookId = req.params.bookId;
     const SQL = 'DELETE FROM Books WHERE id = ?';
     

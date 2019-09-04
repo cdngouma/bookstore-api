@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const db = require('../database/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const checkAuth = require('../auth/check-auth');
 
 router.post('/signup', (req, res, next) => {
     
@@ -80,7 +81,7 @@ router.post('/login', (req, res, next) => {
     });
 });
 
-router.get('/:username/info', (req, res, next) => {
+router.get('/:username/info', checkAuth, (req, res, next) => {
     const username = req.params.username;
     const SQL = 'SELECT first_name AS firstName, last_name AS lastName FROM Users WHERE username = ?';
 

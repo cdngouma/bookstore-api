@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 router.post('/signup', (req, res, next) => {
@@ -37,11 +38,15 @@ router.post('/signup', (req, res, next) => {
 });
 
 router.post('/login', (req, res, next) => {
+    const SQL = 'SELECT `password`, first_name AS firstName, last_name AS lastName FROM Users WHERE username = ?';
 
-    db.query('SELECT `password` FROM Users WHERE username = ?', [req.body.username])
+    db.query(SQL, [req.body.username])
     .then(rows => {
         if(rows.length > 0){
             const {password} = rows[0];
+            const {firstName} = rows[0];
+            const {lastName} = rows[0];
+            
             bcrypt.compare(req.body.password, password, (err, result) => {
                 if(err){
                     res.status(500).json({
@@ -54,8 +59,16 @@ router.post('/login', (req, res, next) => {
                     });
                 }
                 else{
+                    const JWT_KEY = 'encrypt';
+                    const token = jwt.sign({
+                        username: req.body.username,
+                        firstName: firstName,
+                        lastName: lastName
+                    }, JWT_KEY,{ expiresIn: "1h" });
+
                     res.status(200).json({
-                        message: 'Auth succeded'
+                        message: 'Auth successful',
+                        token: token
                     });
                 }
             });

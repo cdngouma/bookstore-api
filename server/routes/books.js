@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const checkAuth = require('../auth/check-auth')
 
 router.get('/', (req, res, next) => {
     const SQL = 'SELECT id, author, isbn, title, `year` AS publicationYear, price, cover FROM Books';
@@ -20,7 +21,7 @@ router.get('/', (req, res, next) => {
         });
 });
 
-router.post('/', (req, res, next) => {
+router.post('/', checkAuth, (req, res, next) => {
     const SQL = 'CALL EDIT_BOOK (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
     const params = [
         null,

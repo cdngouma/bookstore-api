@@ -2,15 +2,15 @@ const express = require('express');
 const fetch = require('node-fetch');
 const router = express.Router();
 const db = require('../database/db');
-const checkAuth = require('../auth/check-auth');
 
 router.get('/', (req, res, next) => {
     const isbn = req.query.isbn;
     // find the book corresponding to the given ISBN
     if(isbn && req.query.d) {
         // if full details requested check if book is in database
-        db.query('SELECT id, isbn10, isbn13, author, title, publisher, published_date AS publishedDate, edition, pages AS pageCount,' +
-                ' category, lang AS `language`, `desc` AS `description`, cover, created_at AS createdAt FROM Books WHERE isbn13='+isbn+' OR isbn10='+isbn)
+        db.query(`SELECT id, isbn10, isbn13, author, title, publisher, published_date AS publishedDate, edition, pages AS pageCount, ` +
+                 `category, lang AS 'language', 'desc' AS 'description', cover, created_at AS createdAt FROM Books `+
+                 `WHERE isbn13=${isbn} OR isbn10=${isbn}`)
         .then(rows => {
             // if book is in database, return book
             if(rows.length > 0) {
@@ -26,7 +26,7 @@ router.get('/', (req, res, next) => {
     }
     else if(isbn) {
         // if general info requested
-        db.query('SELECT id, isbn10, isbn13, title, author, category, cover FROM BookGeneral WHERE isbn13='+isbn+' OR isbn10='+isbn)
+        db.query(`SELECT id, isbn10, isbn13, title, author, category, cover FROM BookGeneral WHERE isbn13=${isbn} OR isbn10=${isbn}`)
         .then(rows => {
             // if book is in database, return book
             if(rows.length > 0){
@@ -34,7 +34,7 @@ router.get('/', (req, res, next) => {
             }
             // if not in database, fetch data from Google books
             else {
-                fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn)
+                fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`)
                 .then(response => response.json())
                 .then(response => {
                     if(response.totalItems > 0){
@@ -57,8 +57,8 @@ router.get('/', (req, res, next) => {
     else {
         const author = req.query.author || null;
         const category = req.query.category || null;
-        const SQL = 'SELECT id, isbn10, isbn13, author, title, category, cover FROM BookGeneral B\n' +
-                    'WHERE ('+author+' IS NULL OR B.author = '+author+') AND ('+category+' IS NULL OR B.category='+category+')';
+        const SQL = `SELECT id, isbn10, isbn13, author, title, category, cover FROM BookGeneral B\n` +
+                    `WHERE (${author} IS NULL OR B.author = ${author}) AND (${category} IS NULL OR B.category=${category})`;
         db.query(SQL)
         .then(rows => {
             if (rows.length > 0)
@@ -74,12 +74,6 @@ router.get('/', (req, res, next) => {
     }
 });
 
-router.post('/', (req, res, next) => {
-    res.status(200).json({
-        message: 'TODO: Implement POST for Books'
-    });
-});
-
 router.get('/:bookId', (req, res, next) => {
     const bookId = req.params.bookId;
     const SQL = 'SELECT id, isbn10, isbn13, author, title, publisher, published_date AS publishedDate, edition, pages AS pageCount,' +
@@ -93,26 +87,6 @@ router.get('/:bookId', (req, res, next) => {
                 message: 'Not Found'
             });
         }
-    })
-    .catch(err => {
-        res.status(500).json({
-            error: err
-        });
-    });
-});
-
-router.patch('/:bookId', checkAuth, (req, res, next) => {
-    res.status(200).json({
-        message: 'TODO: Implement PATCH/PUT for Books'
-    });
-});
-
-router.delete('/:bookId', checkAuth, (req, res, next) => {
-    const bookId = req.params.bookId;
-    db.query('DELETE FROM Books WHERE id = ?', [bookId]).then(rows => {
-        res.status(200).json({
-            message: 'Book deleted'
-        });
     })
     .catch(err => {
         res.status(500).json({

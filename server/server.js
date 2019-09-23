@@ -1,33 +1,22 @@
 const http = require('http');
 const express = require('express');
 const bodyParser = require('body-parser');
+const env = require('dotenv');
 
 const app = express();
+env.config();
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
-// handle CORS errors
-/*app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header(
-        'Access-Control-Allow-Headears', 
-        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-    );
-    
-    if(req.method === 'OPTIONS'){
-        res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, GET, DELETE');
-        return res.status(200).json({});
-    }
-    next();
-});*/
-
-const bookRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
+const merchantRoutes = require('./routes/merchants');
+const bookRoutes = require('./routes/books');
 
 // routes which handle requests
-app.use('/api/books', bookRoutes);
-app.use('/api/user', userRoutes);
+app.use(`/api/${process.env.API_VERSION}/user`, userRoutes);
+app.use(`/api/${process.env.API_VERSION}/merchants`, merchantRoutes);
+app.use(`/api/${process.env.API_VERSION}/books`, bookRoutes);
 
 // fires when uri is not supported (does not exist)
 app.use((req, res, next) => {
@@ -45,8 +34,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-const port = process.env.PORT || 3000;
-
 const server = http.createServer(app);
 
-server.listen(port, () => { console.log(`Server started on port ${port}`) });
+server.listen(process.env.PORT, () => { console.log(`running version ${process.env.API_VERSION} on port ${process.env.PORT}`) });

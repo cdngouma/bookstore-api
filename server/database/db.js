@@ -4,21 +4,22 @@ class Database {
     constructor() {
         this.pool = mysql.createPool({
             host: 'localhost',
-            user: 'root',
-            password: 'root',
-            database: 'book-rental',
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: 'bookstore',
             connectionLimit: 10,
             connectTimeout: 60000,
             supportBigNumbers: true
         });
     }
 
-    query(sql, args) {
+    query(sql, object) {
+        object = object || {};
+        const args = Object.values(object);
         return new Promise((resolve, reject) => {
             this.pool.query(sql, args, (err, rows) => {
                 if (err)
                     return reject(err);
-                console.log(rows);
                 resolve(rows);
             });
         });

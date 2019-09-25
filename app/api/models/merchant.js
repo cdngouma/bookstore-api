@@ -10,6 +10,7 @@ const Merchant = db.define('merchant', {
     },
     userId: {
        type: Sequelize.STRING,
+       field: 'user_id',
        references: {
            model: User,
            key: 'id'
@@ -63,7 +64,7 @@ const Merchant = db.define('merchant', {
        defaultValue: Sequelize.NOW,
        field: 'created_at'
     },
-    lastModified: {
+    updatedAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
         field: 'last_modified'

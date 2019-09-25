@@ -1,3 +1,4 @@
 .env
-sql-scripts
+ddl.sql
+routines.sql
 node_modules

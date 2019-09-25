@@ -40,8 +40,8 @@ ALTER TABLE `Merchants` ADD CONSTRAINT `ck_if_business_or_individual` CHECK((fir
 
 create table `Books`(
 	id varchar(8) PRIMARY KEY,
-    isbn10 bigint(10) UNSIGNED UNIQUE,
-    isbn13 bigint(13) UNSIGNED UNIQUE,
+    isbn10 varchar(10) UNIQUE,
+    isbn13 varchar(13) UNIQUE,
     author varchar(100) NOT NULL,
     title varchar(255) NOT NULL,
     publisher varchar(100) NOT NULL,

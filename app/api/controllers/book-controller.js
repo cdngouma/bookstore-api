@@ -1,18 +1,20 @@
 const fetch = require('node-fetch');
-const Book = require('../../models/Book');
+const Book = require('../models/book');
+const Op = (require('sequelize')).Op;
 
-exports.getBook = (req, res, next) => {
-    const bookId = req.params.bookId;
-    Book.findById({bookId}).then(rows => {
-        if (rows.length > 0) {
-            res.status(200).json(rows[0]);
+exports.getBookById = (req, res, next) => {
+    Book.findByPk(req.params.bookId)
+    .then(book => {
+        if (book) {
+            res.status(200).json(book);
         }
         else {
             res.status(404).json({
                 message: 'Not Found'
             });
         }
-    }).catch(err => {
+    })
+    .catch(err => {
         res.status(500).json({
             error: err
         });
@@ -20,7 +22,7 @@ exports.getBook = (req, res, next) => {
 }
 
 // find book by ISBN or find all books
-exports.getBooks = (req, res, next) => {
+exports.getAllBooks = (req, res, next) => {
     const isbn = req.query.isbn;
     // find the book corresponding to the given ISBN   
     // preview book
@@ -30,22 +32,24 @@ exports.getBooks = (req, res, next) => {
     else if(isbn) {
         getFullBookDetails(isbn, res);
     }
-    // find list of books based on criteria: author and category
-    // TODO: Fix query
     else {
-        const author = req.query.author || null;
-        const category = req.query.category || null;
-        const publicationYear = req.query.year || null;
-        const SQL = 'SELECT id, isbn10, isbn13, author, title, category, cover AS imageLink FROM Books\n' +
-                    'WHERE (? IS NULL OR author LIKE (?)) AND (? IS NULL OR category LIKE (?)) AND (? IS NULL OR published_date=?)';
-        Book.query(SQL, {author: author, category:category}).then(rows => {
-            if (rows.length > 0) {
-                res.status(200).json(rows);
+    // filter list of books based by author, category and publication date
+        const filter = {};
+        if(req.query.author) filter.where.author = req.query.author;
+        if(req.query.category) filter.where.category = req.query.category;
+        if(req.query.publicationYear) filter.where.publicationYear = req.query.publicationYear;
+        console.log(filter);
+        
+        Book.findAll(filter)
+        .then(books => {
+            if (books) {
+                res.status(200).json(books);
             }
             else {
                 res.status(204).json({ message: 'No book available' });
             }
-        }).catch((err) => {
+        })
+        .catch((err) => {
             res.status(500).json({
                 error: err
             });
@@ -54,34 +58,47 @@ exports.getBooks = (req, res, next) => {
 }
 
 function getFullBookDetails(isbn, res) {
-    Book.findByIsbn(isbn).then(rows => {
+    Book.findOne({
+        where: {
+            $or: [
+                { isbn10: isbn },
+                { isbn13: isbn }
+            ]
+        }
+    })
+    .then(book => {
         // if book is in database, return book
-        if(rows.length > 0) {
-            res.status(200).json(rows[0]);
+        if(book) {
+            res.status(200).json(book);
         }
         else {
             res.status(404).json({ message: 'Not Found' });
         }
-    }).catch(err => {
+    })
+    .catch(err => {
         res.status(500).json({ error: err });
     });
 }
 
 function previewBook(isbn, res) {
-    Book.findByIsbnPreview({isbn})
-    .then(rows => {
     // get book info from database
-        if(rows.length > 0){
-            res.status(200).json(rows[0]);
+    Book.findOne({
+        where: {
+            [Op.or]: [ { isbn10: isbn }, { isbn13: isbn } ]
+        },
+        attributes: ['isbn10', 'isbn13', 'title', 'author', 'publishedDate', 'category', 'imageLink']
+    })
+    .then(book => {
+        if(book){
+            res.status(200).json(book);
         }
-    // if no data found in database, fetch data from Google books
         else {
+        // if no data found in database, fetch data from Google books
             fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`)
             .then(response => response.json()).then(response => {
                 if(response.totalItems > 0){
-                // extract book data
-                    const book = extractBookDetails(response.items[0], isbn);             
-                    res.status(200).json(book);
+                    const newBook = extractBookDetails(response.items[0], isbn);      
+                    res.status(200).json(newBook);
                 }
                 else{
                     res.status(404).json({ message: 'Not Found' });

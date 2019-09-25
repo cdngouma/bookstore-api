@@ -1,37 +1,38 @@
 const fetch = require('node-fetch');
 const shortUUID = require('shortid');
 
-const Merchant = require('../models/Merchant');
-const User = require('../models/User');
-const Book = require('../models/Book');
+const Merchant = require('../models/merchant');
+const User = require('../models/user');
+const Book = require('../models/book');
+const Product = require('../models/product');
 
 // Make a user a merchant
 exports.becomeAMerchant = (req, res, next) => {
     const username = req.query.user;
-    if(req.userData.username !== username){
-        return res.status(401).json({ message: 'Access denied' });
-    }
-
-    User.verifyByUsername(username).then(rows => {
-        if(rows.length > 0) {
+    User.findOne({
+        where: { username: username },
+        attributes: ['id']
+    })
+    .then(user => {
+        if(user) {
             Merchant.insert({
                 id: shortUUID.generate(),
-                username: username,
+                userId: user.id,
                 firstName: req.body.firstName,
-                lastName: req.body.firstName,
+                lastName: req.body.lastName,
                 dateOfBirth: req.body.dateOfBirth,
                 gender: req.body.gender,
-                street: req.body.street,
-                apt: req.body.apt,
-                city: req.body.city,
-                state: req.body.state,
-                zipCode: req.body.zipCode,
-                country: req.body.country
+                street: req.body.address.street,
+                apt: req.body.address.apt,
+                city: req.body.address.city,
+                state: req.body.address.state,
+                zipCode: req.body.address.zipCode,
+                country: req.body.address.country
             })
-            .then(rows => {
+            .then(newMerchant => {
                 res.status(201).json({
                     message: 'New merchant created',
-                    merchant: rows[0]
+                    merchant: newMerchant
                 });
             })
             .catch(err => {
@@ -41,33 +42,40 @@ exports.becomeAMerchant = (req, res, next) => {
         else {
             res.status(400).json({ message: 'Not found'});
         }
-    }).catch(err => {
+    })
+    .catch(err => {
         res.status(500).json({ error: err });
     });
 }
 
 exports.advertiseNewProduct = (req, res, next) => {
     const username = req.params.username;
-    if(req.userData.username !== username){
-        return res.status(401).json({ message: 'Access denied' });
-    }
-
     const isbn = req.body.isbn;
     // first check if book is in database
     // if no data available, fetch data from Google Books
     // then create new book, then create new product
-    Book.query('SELECT id FROM Books WHERE isbn10=? OR isbn13=?', {isbn})
-    .then(rows => {
-        if(rows.length > 0){
-            createProduct(req.body, rows[0].id, username);
+    Book.findOne({
+        where: {
+            [Op.or]: [
+                {isbn10: isbn}, {isbn13: isbn}
+            ]
+        },
+        attributes: ['id']
+    })
+    .then(book => {
+        if(book){
+            createProduct(req.body, book.id, userId);
         }
         else {
             const uri = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
             fetch(uri).then(response => response.json()).then(response => {
                 if(response.totalItems > 0){
-                    const newBook = extractBookDetails(response.items[0], isbn);
-                    Book.insert(newBook).then(rows => {
-                        createProduct(req.body, rows[0].id, username);
+                    const details = extractBookDetails(response.items[0], isbn);
+                    // set new id for book
+                    details.id = shortUUID.generate();
+                    Book.create(details)
+                    .then(newBook => {
+                        createProduct(req.body, newBook.id, userId);
                     })
                     .catch(err => {
                         res.status(500).json({ error: err });
@@ -99,10 +107,8 @@ function extractBookDetails(data, isbn){
         }
     }
     // set cover image path
-    const newId = shortUUID.generate();
     const imageLink = `http://books.google.com/books/content?id=${data.id}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`;
     return {
-        id: newId,
         isbn10: isbn10,
         isbn13: isbn13,
         title: data.volumeInfo.title,
@@ -118,27 +124,22 @@ function extractBookDetails(data, isbn){
     };
 }
 
-function createProduct(data, bookId, username){
-    const newId = shortUUID.generate();
-    const newProduct = {
-        id: newId,
+function createProduct(data, bookId, userId){
+    Product.create({
+        id: shortUUID.generate(),
         bookId: bookId,
-        username: username,
+        userId: userId,
         price: data.price,
         quality: data.quality,
         width: data.width,
         length: data.height,
         thickness: data.thickness,
         weight: data.weight
-    };
-
-    // params: bookId, username, price, quality, width, height, thickness, weight 
-    Product.insert(newProduct).then(rows => {
-        Product.findById(newId).then(rows => {
-            res.status(201).json({
-                message: 'New product added',
-                product: rows[0]
-            });
+    })
+    .then(product => {
+        res.status(201).json({
+            message: 'New product added',
+            data: product
         });
     })
     .catch(err => {

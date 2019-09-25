@@ -6,7 +6,7 @@ const User = require('../models/user');
 
 // create new user
 exports.signup = (req, res, next) => {
-    bcrypt.hash(req.body.password, 8, (err, passwordHash) => {
+    bcrypt.hash(req.body.password, 10, (err, passwordHash) => {
         if(err) {
             return res.status(500).json({ error: err });
         }
@@ -54,27 +54,23 @@ exports.signup = (req, res, next) => {
 }
 
 exports.login = (req, res, next) => {
-    const loginEmail = req.body.email;
-    const loginUsername = req.body.username;
-    if(!loginEmail && !loginUsername) {
+    var identifier = {};
+    if(req.body.username) identifier.username = req.body.username;
+    else if(req.body.email) identifier.email = req.body.email;
+    else {
         return res.status(401).json({
             error: { message: 'Auth failed' }
         });
     }
 
     User.findOne({
-        where: {
-            $or: [
-                { email: loginEmail },
-                { username: loginUsername }
-            ]
-        },
+        where: identifier,
         attributes: ['password']
     })
     .then(user => {
-        if(user){
-            console.log(user.dataValues);       
-            bcrypt.compare(req.body.password, user.dataValues.password, (err, result) => {
+        if(user) {     
+            bcrypt.compare(req.body.password, user.password, (err, result) => {
+                console.log(result);
                 if(err) {
                     res.status(500).json({ error: err });
                 }
@@ -114,8 +110,7 @@ exports.updateUser = (req, res, next) => {
             const updates = extractValidProperties(req.body, res);
             user.update(updates)
             .then(updatedUser => {
-                delete updatedUser.dataValues.id;
-            //    delete updatedUser.dataValues.password;
+                delete updatedUser.dataValues.id; // hide id to client
                 res.status(201).json({
                     message: 'User updated',
                     data: updatedUser

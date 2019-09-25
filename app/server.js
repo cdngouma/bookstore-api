@@ -11,13 +11,13 @@ app.use(bodyParser.json());
 
 const userRoutes = require('./api/routes/user');
 //const merchantRoutes = require('./api/routes/merchants');
-//const bookRoutes = require('./api/routes/books');
+const bookRoutes = require('./api/routes/books');
 
 // routes which handle requests
 const API_VERSION = process.env.API_VERSION || 'dev';
 app.use(`/api/${API_VERSION}/user`, userRoutes);
 //app.use(`/api/${API_VERSION}/merchants`, merchantRoutes);
-//app.use(`/api/${API_VERSION}/books`, bookRoutes);
+app.use(`/api/${API_VERSION}/books`, bookRoutes);
 
 // fires when uri is not supported (does not exist)
 app.use((req, res, next) => {

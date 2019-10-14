@@ -6,27 +6,30 @@ const app = express();
 const env = require('dotenv');
 env.config();
 
+const API_VERSION = process.env.API_VERSION || 'dev';
+const PORT = process.env.PORT || 3000;
+
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
+// import routes
 const userRoutes = require('./api/routes/user');
-//const merchantRoutes = require('./api/routes/merchants');
+const sellerRoutes = require('./api/routes/sellers');
 const bookRoutes = require('./api/routes/books');
 
-// routes which handle requests
-const API_VERSION = process.env.API_VERSION || 'dev';
-app.use(`/api/${API_VERSION}/user`, userRoutes);
-//app.use(`/api/${API_VERSION}/merchants`, merchantRoutes);
-app.use(`/api/${API_VERSION}/books`, bookRoutes);
+app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/sellers', sellerRoutes);
+app.use('/api/v1/books', bookRoutes);
 
 // fires when uri is not supported (does not exist)
 app.use((req, res, next) => {
+    console.log("not found");
     const error = new Error('Not Found');
     error.status = 404;
     next(error);
 });
 
-// handle any other thrown errors
+// handle any unhandled error
 app.use((err, req, res, next) => {
     res.status(err.status || 500).json({
         error: {
@@ -35,7 +38,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
 app.set('port', PORT);
 
 const server = http.createServer(app);

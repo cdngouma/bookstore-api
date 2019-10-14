@@ -1,93 +1,104 @@
-create table `Users`(
-	id varchar(8) PRIMARY KEY,
-    username varchar(100) UNIQUE NOT NULL,
-    user_email varchar(255) UNIQUE NOT NULL,
-    user_password varchar(255) NOT NULL,
-    created_at timestamp DEFAULT NOW(),
-    last_accessed timestamp DEFAULT NOW(),
-    last_modified timestamp
+-- GLOBAL:
+create table `countries`(
+	country_id int unsigned auto_increment primary key,
+    country_name varchar(75) unique not null,
+    short_name char(2) not null,
+    country_region varchar(15) not null
 );
 
-ALTER TABLE `Users` ADD CONSTRAINT `ck_email_format` CHECK(REGEXP_LIKE(user_email, '^[a-zA-Z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+(?:[a-zA-Z]{2}|aero|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel)$'));
+create table `states`(
+	state_id int unsigned auto_increment primary key,
+    country_id int unsigned not null,
+    state_name varchar(50) not null,
+    short_name char(2) not null
+);
 
-create table `Merchants`(
-	id varchar(8) PRIMARY KEY,
-    user_id varchar(8) NOT NULL,
-    business varchar(255),
-    first_name varchar(255),
-    last_name varchar(255),
-    date_of_birth date,
+alter table `states` add constraint `unique_state` unique(country_id, short_name);
+alter table `states` add foreign key (country_id) references `countries` (country_id);
+
+-- USERS:
+create table `users`(
+	user_id varchar(8) primary key,
+    username varchar(100) unique not null,
+    user_email varchar(255) unique not null,
+    user_password varchar(255) not null,
+    created_at datetime default NOW()
+);
+
+alter table `users` add constraint `check_email_format` check(REGEXP_LIKE(user_email, '^[a-zA-Z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+(?:[a-zA-Z]{2}|aero|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel)$'));
+
+create table `users_info`(
+	user_id varchar(8) unique not null,
+    first_name varchar(255) not null,
+    last_name varchar(255) not null,
+    date_of_birth date not null,
     gender varchar(10),
-    street varchar(255) NOT NULL,
-    apt varchar(5),
-    city varchar(255) NOT NULL,
+    updated_at datetime
+);
+
+alter table `users_info` add foreign key (user_id) references `users` (user_id);
+alter table `users_info` add constraint `check_user_gender` check (LOWER(gender) in ('male', 'female', 'non-binary'));
+
+-- Merchants:
+create table `sellers`(
+	seller_id varchar(8) primary key,
+    user_id varchar(8) not null,
+    verified boolean not null default false,
+    created_at datetime default NOW()
+);
+
+alter table `sellers` add foreign key (user_id) references `users` (user_id);
+
+create table `sellers_addresses`(
+	seller_id varchar(8) unique not null,
+    line1 varchar(255) not null,
+    city varchar(100) not null,
     state char(2),
-    zip_code varchar(10),
-    country varchar(255) NOT NULL,
-    created_at timestamp DEFAULT NOW(),
-    last_modified timestamp
+    country varchar(75) not null,
+    zip_code varchar(5),
+    updated_at datetime
 );
 
-ALTER TABLE `Merchants` ADD FOREIGN KEY(user_id) REFERENCES `Users`(id) ON DELETE CASCADE ON UPDATE CASCADE;
--- Set minimum age to sell at 13 ?
--- ALTER TABLE `Merchants` ADD CONSTRAINT `ck_min_age` CHECK(CURDATE() - date_of_birth >= 13);
-ALTER TABLE `Merchants` ADD CONSTRAINT `ck_gender` CHECK(UPPER(gender) IN ('MALE','FEMALE','NON-BINARY'));
-ALTER TABLE `Merchants` ADD CONSTRAINT `ck_street_format` CHECK(REGEXP_LIKE(street, '^([0-9]+) ([a-zA-Z\-_0-9 ]+)$'));
-ALTER TABLE `Merchants` ADD CONSTRAINT `ck_apartment_num` CHECK(REGEXP_LIKE(apt, '^[0-9]{1,4}[A-Z]?$'));
--- only require state for Canada and USA
-ALTER TABLE `Merchants` ADD CONSTRAINT `ck_state` CHECK(UPPER(country) IN ('United States', 'Canada') OR state IS NULL);
-ALTER TABLE `Merchants` ADD CONSTRAINT `ck_if_business_or_individual` CHECK((first_name IS NOT NULL AND last_name IS NOT NULL AND date_of_birth IS NOT NULL AND gender IS NOT NULL AND apt IS NOT NULL) XOR business IS NULL);
+alter table `sellers_addresses` add foreign key (seller_id) references `sellers` (seller_id);
+alter table `sellers_addresses` add constraint `check_address` check (REGEXP_LIKE(line1, '^([0-9]+) ([a-zA-Z ]+) ((Apt|Suite|Unit|apt|suite|unit) ([1-9][0-9]{0,4}[A-Z]?))?$'));
+alter table `sellers_addresses` add constraint `check_zipcode` check (zip_code >= 10000);
 
-create table `Books`(
-	id varchar(8) PRIMARY KEY,
-    isbn10 varchar(10) UNIQUE,
-    isbn13 varchar(13) UNIQUE,
-    author varchar(100) NOT NULL,
-    title varchar(255) NOT NULL,
-    publisher varchar(100) NOT NULL,
-    published_date int(4) UNSIGNED NOT NULL,
-    edition varchar(100) NOT NULL,
-    page_count int(4) UNSIGNED NOT NULL,
-    category varchar(80) NOT NULL,
-    book_language char(2),
-    book_desc varchar(500),
-    init_average_rating float(2,1) UNSIGNED,
-    init_ratings_count int(5) UNSIGNED,
-    image_link varchar(255) UNIQUE NOT NULL,
-    created_at timestamp DEFAULT NOW()
+-- BOOKS:
+create table `books`(
+	book_id varchar(8) primary key,
+    isbn10 varchar(10) unique,
+    isbn13 varchar(13) unique,
+    title varchar(255) not null,
+    author varchar(100) not null,
+    category varchar(80) not null,
+	edition varchar(100) not null,
+    publisher varchar(100) not null,
+    published_date int(4) unsigned not null,
+    page_count int(4) unsigned not null,    
+    `language` char(2),
+    `description` varchar(500),
+    image_link varchar(255) unique not null,
+    created_at timestamp default NOW()
 );
 
-ALTER TABLE `Books` ADD CONSTRAINT `ck_isbn10` CHECK(LENGTH(isbn10) = 10);
-ALTER TABLE `Books` ADD CONSTRAINT `ck_isbn13` CHECK(LENGTH(isbn10) = 13);
-ALTER TABLE `Books` ADD CONSTRAINT `ck_isbns` CHECK(isbn10 IS NOT NULL OR isbn13 IS NOT NULL);
-ALTER TABLE `Books` ADD CONSTRAINT `unq_book` UNIQUE(author, title, edition);
--- ALTER TABLE `Books` ADD CONSTRAINT `ck_publication_year` CHECK(published_date <= YEAR(NOW()));
-ALTER TABLE `Books` ADD CONSTRAINT `ck_book_lang` CHECK(LENGTH(book_language) = 2);
+alter table `books` add constraint `check_isbn_format` check((isbn10 is not null or isbn13 is not null) and LENGTH(isbn10) = 10 and LENGTH(isbn13) = 13);
+alter table `books` add constraint `unique_book` unique (author, title, edition, published_date);
+alter table `books` add constraint `check_book_language` check (LENGTH(`language`) = 2);
 
-create view `BooksGeneral` AS
-SELECT id, isbn10, isbn13, author, title, published_date, image_link, created_at
-FROM `Books`;
+create view `book_general_info` as
+select id, isbn10, isbn13, author, title, published_date, image_link, created_at
+from `books`;
 
-create table `Products`(
-	id varchar(8) PRIMARY KEY,
-    book_id varchar(8) NOT NULL,
-    merchant_id varchar(8) NOT NULL,
-    price double(5,2) NOT NULL,
-    quality varchar(4) NOT NULL,
-    print_type varchar(10) NOT NULL,
-    width float(3,1) NOT NULL,
-    `length` float(3,1) NOT NULL,
-    thickness float(3,1)NOT NULL,
-    weight float(3,1),
-    created_at timestamp DEFAULT NOW()
+create table `products`(
+	product_id varchar(8) primary key,
+    book_id varchar(8) not null,
+    seller_id varchar(8) not null,
+    price double(5,2) unsigned not null,
+    quality varchar(4) not null,
+    in_stock int unsigned not null,
+    created_at timestamp default NOW()
 );
 
-create table `Orders`(
-	id bigint(8) PRIMARY KEY,
-    user_id varchar(8) NOT NULL,
-    product_id varchar(8) NOT NULL,
-    amount double(6,2) NOT NULL,
-    ordered_at timestamp DEFAULT NOW(),
-    return_date date NOT NULL,
-    is_returned boolean DEFAULT FALSE
-);
+alter table `products` add foreign key (book_id) references `books` (book_id);
+alter table `products` add foreign key (seller_id) references `sellers` (seller_id);
+alter table `products` add constraint `check_quality` check (LOWER(quality) in ('used','like-new'));

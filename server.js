@@ -15,6 +15,7 @@ app.use(bodyParser.json());
 
 app.use('/api/v1/books', bookRoutes);
 
+// Config
 app.set('port', config.PORT);
 
 const server = http.createServer(app);
@@ -34,7 +35,5 @@ const db = mongoose.connection;
 db.on('error', (err) => console.log(err));
 
 db.once('open', () => {
-    //require('.routes/locations')(server);
-
     console.log(`server started on port ${config.PORT}...`);
 });

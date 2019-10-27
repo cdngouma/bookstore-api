@@ -4,12 +4,20 @@ const timestamp = require('mongoose-timestamp');
 const BookSchema = new mongoose.Schema({
     isbn10: {
         type: String,
+        unique: true,
+        trim: true,
+        minlength: 10,
+        maxlength: 10,
         required: () => {
             return isbn13 ? false : true;
         }
     },
     isbn13: {
         type: String,
+        unique: true,
+        trim: true,
+        minlength: 13,
+        maxlength: 13,
         required: () => {
             return isbn10 ? false : true;
         }
@@ -29,14 +37,12 @@ const BookSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    maturityLevel: {
+    maturityRating: {
         type: String,
         trim: true
     },
     edition: {
-        type: String,
-        required: true,
-        trim: true
+        type: Number
     },
     publisher: {
         type: String,
@@ -49,6 +55,7 @@ const BookSchema = new mongoose.Schema({
     },
     pageCount: {
         type: Number,
+        min: 1,
         required: true
     },
     language: {

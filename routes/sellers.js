@@ -136,7 +136,7 @@ router.post('/:id/products', async (req, res, next) => {
                     bookId: book._id,
                     price: data.price,
                     quality: data.quality,
-                    numItems: data.numItems
+                    status: data.status
                 });
 
                 res.status(201).json({
@@ -155,7 +155,7 @@ router.post('/:id/products', async (req, res, next) => {
                         bookId: newBook._id,
                         price: data.price,
                         quality: data.quality,
-                        numItems: data.numItems
+                        status: data.status
                     });
 
                     res.status(201).json({

@@ -136,7 +136,7 @@ router.post('/:id/products', async (req, res, next) => {
                     bookId: book._id,
                     price: data.price,
                     quality: data.quality,
-                    numItems: data.numItems
+                    status: data.status
                 });
 
                 res.status(201).json({
@@ -155,7 +155,7 @@ router.post('/:id/products', async (req, res, next) => {
                         bookId: newBook._id,
                         price: data.price,
                         quality: data.quality,
-                        numItems: data.numItems
+                        status: data.status
                     });
 
                     res.status(201).json({
@@ -174,6 +174,7 @@ router.post('/:id/products', async (req, res, next) => {
             });
         }
     } catch (err) {
+        console.log(err);
         res.status(500).json({
             error: err
         });
@@ -207,5 +208,27 @@ function extractBookDetails(data, isbn) {
         imageLink: imageLink
     };
 }
+
+router.delete('/:sellerId/prducts/:productId', async (req, res, next) => {
+    const sellerId = req.params.sellerId;
+    const productId = req.params.productId;
+    try {
+        const deletedProduct = await Product.findByIdAndDelete({ _id: productId, sellerId: sellerId });
+        if (deletedProduct) {
+            res.status(200).json({
+                message: 'Product removed'
+            });
+        } else {
+            res.status(404).json({
+                message: 'Not found'
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            error: err
+        });
+    }
+});
 
 module.exports = router;

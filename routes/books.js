@@ -59,22 +59,18 @@ router.get('/', async (req, res, next) => {
 
 // Filtered search
 async function findAll (queries, attributes) {
-    const params = extractFilters(queries);
+    let params = {};
+    if (queries.author) params.author = decodeURI(queries.author);
+    if (queries.title) params.title = decodeURI(queries.title);
+    if (queries.category) params.category = decodeURI(queries.category);
+    if (queries.year) params.year = queries.year;
+
     try {
         const books = await Book.find(params, attributes);
         return books;
     } catch (err) {
         throw err;
     }
-}
-
-function extractFilters(queries) {
-    let params = {};
-    if (queries.author) params.author = decodeURI(queries.author);
-    if (queries.title) params.title = decodeURI(queries.title);
-    if (queries.category) params.category = decodeURI(queries.category);
-    if (queries.year) params.year = queries.year;
-    return params;
 }
 
 async function findByIsbn (isbn, attributes) {

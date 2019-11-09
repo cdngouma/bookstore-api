@@ -52,23 +52,71 @@ router.post('/login', (req, res, next) => {
     });
 });
 
-/* TODO: Implement Update user */
-router.put('/update/:id', async (req, res, next) => {
+// Update username, email, or/and password
+router.put('/:id/credentials', async (req, res, next) => {
+    const id = req.params.id;
+    bcrypt.hash(req.body.password, 10, async (err, passwordhash) => {
+        if (err) {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            });
+        } else {
+            try {
+                const personalInfo = {};
+                if (req.body.username) personalInfo.username = req.body.username;
+                if (req.body.email) personalInfo.email = req.body.email;
+                if (req.body.password) personalInfo.password = passwordhash;
+
+                const updatedUser = await User.findByIdAndUpdate(id, personalInfo);
+                if (updatedUser) {
+                    res.status(200).json({
+                        message: 'Updated credentials'
+                    });
+                } else {
+                    res.status(404).json({
+                        message: 'Not found'
+                    });
+                }
+            } catch (err) {
+                console.log(err);
+                res.status(500).json({
+                    error: err
+                });
+            }
+        }
+    });
+});
+
+// Update personal informations
+router.put('/:id/profile', async (req, res, next) => {
     try {
         const id = req.params.id;
-        const updates = extractUpdates(req.body);
-        const user = await User.findByIdAndUpdate(id, updates);
+        const personalInfo = {};
+        if (req.body.firstName) personalInfo.firstName = req.body.firstName;
+        if (req.body.lastName) personalInfo.lastName = req.body.lastName;
+        if (req.body.dateOfBirth) personalInfo.dateOfBirth = req.body.dateOfBirth;
+        if (req.body.gender) personalInfo.gender = req.body.gender;
 
+        const user = await User.findByIdAndUpdate(id, personalInfo);
+        if (user) {
+            user.remove('credentials');
+            user.remove('connectInfo');
+            res.status(200).json({
+                message: 'Updated profile',
+                item: user
+            });
+        } else {
+            res.status(404).json({
+                message: 'Not found'
+            });
+        }
     } catch (err) {
         res.status(500).json({
             error: err
         });
     }
 });
-
-function extractUpdates (data) {
-
-}
 
 router.delete('/remove/:id', async (req, res, nect) => {
     try {

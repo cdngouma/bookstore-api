@@ -4,7 +4,8 @@ const router = (require('express')).Router();
 
 router.post('/signup', (req, res, next) => {
     console.log("siging up..");
-    const userPassword = req.body.password;
+    const data = req.body;
+    const userPassword = data.credentials.password;
     bcrypt.hash(userPassword, 10, async (err, passwordhash) => {
         if (err) {
             console.log(err);
@@ -14,18 +15,19 @@ router.post('/signup', (req, res, next) => {
         } else {
             try {
                 const user = await User.create({
+                    retailerName: data.retailerName,
                     credentials: {
-                        username: req.body.username,
-                        email: req.body.email,
+                        username: data.credentials.username,
+                        email: data.credentials.email,
                         password: passwordhash
-                    },
+                    }/*,
                     personalInfo: {
                         retailName: req.body.retailName,
                         firstName: req.body.firstName,
                         lastName: req.body.lastName,
                         dateOfBirth: req.body.dateOfBirth,
                         gender: req.body.gender
-                    }
+                    }*/
                 });
 
                 console.log(user);
@@ -46,11 +48,12 @@ router.post('/signup', (req, res, next) => {
 /* TODO: Implement Login */
 router.post('/login', (req, res, next) => {
     res.status(200).json({
-        todo: 'Implement login service'
+        todo: 'Login service unavailable'
     });
 });
 
-router.put('/:id/update', async (req, res, next) => {
+/* TODO: Implement Update user */
+router.put('/update/:id', async (req, res, next) => {
     try {
         const id = req.params.id;
         const updates = extractUpdates(req.body);
@@ -66,6 +69,27 @@ router.put('/:id/update', async (req, res, next) => {
 function extractUpdates (data) {
 
 }
+
+router.delete('/remove/:id', async (req, res, nect) => {
+    try {
+        const id = req.params.id;
+        const user = await User.findByIdAndDelete(id);
+        if (user) {
+            res.status(200).json({
+                message: 'Account deleted'
+            });
+        } else {
+            res.status(404).json({
+                message: 'Not found'
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            error: err
+        });
+    }
+});
 
 module.exports = router;
 

@@ -7,12 +7,18 @@ const config = require('./config');
 const app = express();
 
 // import routes
+const userRoutes = require('./routes/user');
+const sellerRoutes = require('./routes/sellers');
 const bookRoutes = require('./routes/books');
 
 // Middleware
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
+//const VERSION = config.API_VERSION;
+
+app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/sellers', sellerRoutes);
 app.use('/api/v1/books', bookRoutes);
 
 // Config

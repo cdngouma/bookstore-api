@@ -9,7 +9,7 @@ const BookSchema = new mongoose.Schema({
         minlength: 10,
         maxlength: 10,
         required: () => {
-            return isbn13 ? false : true;
+            return this.isbn13 ? false : true;
         }
     },
     isbn13: {
@@ -19,7 +19,7 @@ const BookSchema = new mongoose.Schema({
         minlength: 13,
         maxlength: 13,
         required: () => {
-            return isbn10 ? false : true;
+            return this.isbn10 ? false : true;
         }
     },
     title: {

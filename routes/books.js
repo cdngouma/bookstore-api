@@ -110,20 +110,15 @@ function extractBookDetails(data) {
     }
 
     const imageLink = `http://books.google.com/books/content?id=${data.id}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`;
-
+    const publishedDate = new Date(data.volumeInfo.publishedDate);
     return {
         isbn10: isbn10,
         isbn13: isbn13,
         title: data.volumeInfo.title,
         author: data.volumeInfo.authors[0],
-        //category: data.volumeInfo.categories[0],
-        //maturityRating: data.volumeInfo.maturityRating,
         edition: data.volumeInfo.edition,
         publisher: data.volumeInfo.publisher,
-        publishedDate: data.volumeInfo.publishedDate,
-        //pageCount: data.volumeInfo.pageCount,
-        //language: data.volumeInfo.language,
-        //description: data.volumeInfo.description,
+        publishedDate: publishedDate.getFullYear(),
         imageLink: imageLink
     }
 }

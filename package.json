@@ -1,39 +1,28 @@
 {
-  "name": "com.ngoum.bookstore",
+  "name": "bookstore-api",
   "version": "1.0.0",
-  "description": "An online book rental service",
-  "main": "app/server.js",
+  "description": "",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cdngouma/book-rental-services.git"
+    "url": "git+https://github.com/cdngouma/bookstore-api.git"
   },
-  "keywords": [
-    "book",
-    "book rental",
-    "bookstore",
-    "online"
-  ],
-  "author": "cdngouma",
+  "keywords": [],
+  "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/cdngouma/book-rental-services/issues"
+    "url": "https://github.com/cdngouma/bookstore-api/issues"
   },
-  "homepage": "https://github.com/cdngouma/book-rental-services#readme",
+  "homepage": "https://github.com/cdngouma/bookstore-api#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
-    "mysql2": "^1.7.0",
-    "node-fetch": "^2.6.0",
-    "sequelize": "^5.19.0",
-    "shortid": "^2.2.15"
-  },
-  "devDependencies": {
-    "dotenv": "^8.1.0",
-    "jsonwebtoken": "^8.5.1",
-    "nodemon": "^1.19.2"
+    "mongoose": "^5.7.7",
+    "mongoose-timestamp": "^0.6.0",
+    "node-fetch": "^2.6.0"
   }
 }

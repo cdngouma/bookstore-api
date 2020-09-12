@@ -23,6 +23,6 @@
     "express": "^4.17.1",
     "mongoose": "^5.7.7",
     "mongoose-timestamp": "^0.6.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.1"
   }
 }
